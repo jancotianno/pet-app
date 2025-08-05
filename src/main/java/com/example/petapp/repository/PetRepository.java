@@ -11,4 +11,5 @@ public interface PetRepository {
     Optional<Pet> findById(Long id);
     List<Pet> findAll();
     void deleteById(Long id);
+    boolean existsById(Long id);
 }

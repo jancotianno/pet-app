@@ -1,11 +1,12 @@
 package com.example.petapp.controller;
 
-import com.example.petapp.exception.PetNotFoundException;
 import com.example.petapp.model.Pet;
 import com.example.petapp.service.PetService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -19,14 +20,15 @@ public class PetController {
     }
 
     @PostMapping
-    public ResponseEntity<Pet> createPet(@RequestBody Pet pet) {
-        return ResponseEntity.ok(petService.createPet(pet));
+    public ResponseEntity<Pet> createPet(@RequestBody @Valid Pet pet) {
+        Pet savedPet = petService.createPet(pet);
+        URI location = URI.create("/pets/" + savedPet.getId());
+        return ResponseEntity.created(location).body(savedPet);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Pet> getPet(@PathVariable Long id) {
-        Pet pet = petService.getPetById(id)
-                .orElseThrow(() -> new PetNotFoundException(id));
+        Pet pet = petService.getPetById(id);
         return ResponseEntity.ok(pet);
     }
 
@@ -36,8 +38,9 @@ public class PetController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Pet> updatePet(@PathVariable Long id, @RequestBody Pet pet) {
-        return ResponseEntity.ok(petService.updatePet(id, pet));
+    public ResponseEntity<Pet> updatePet(@PathVariable Long id, @RequestBody @Valid Pet pet) {
+        Pet updatedPet = petService.updatePet(id, pet);
+        return ResponseEntity.ok(updatedPet);
     }
 
     @DeleteMapping("/{id}")

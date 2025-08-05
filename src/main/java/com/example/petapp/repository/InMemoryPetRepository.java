@@ -22,5 +22,6 @@ public class InMemoryPetRepository implements PetRepository {
     public Optional<Pet> findById(Long id) { return Optional.ofNullable(db.get(id)); }
     public List<Pet> findAll() { return new ArrayList<>(db.values()); }
     public void deleteById(Long id) { db.remove(id); }
+    public boolean existsById(Long id) { return db.containsKey(id); }
 }
 
