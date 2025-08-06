@@ -1,45 +1,36 @@
 package com.example.petapp.controller;
 
-import com.example.petapp.exception.GlobalExceptionHandler;
 import com.example.petapp.exception.PetNotFoundException;
 import com.example.petapp.model.Pet;
+import com.example.petapp.security.SecurityConfig;
 import com.example.petapp.service.PetService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@ExtendWith(MockitoExtension.class)
+@WebMvcTest(PetController.class)
+@Import(SecurityConfig.class)
 class PetControllerTest {
 
+    @Autowired
     private MockMvc mockMvc;
 
-    @Mock
+    @MockBean
     private PetService petService;
 
-    @InjectMocks
-    private PetController petController;
-
     private final ObjectMapper objectMapper = new ObjectMapper();
-
-    @BeforeEach
-    void setup() {
-        mockMvc = MockMvcBuilders.standaloneSetup(petController)
-                .setControllerAdvice(new GlobalExceptionHandler())
-                .build();
-    }
 
     @Test
     void getPet_existingId_returnsOk() throws Exception {
@@ -48,6 +39,7 @@ class PetControllerTest {
         when(petService.getPetById(1L)).thenReturn(pet);
 
         mockMvc.perform(get("/pets/1")
+                        .with(httpBasic("user", "password"))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Fido"))
@@ -59,6 +51,7 @@ class PetControllerTest {
         when(petService.getPetById(99L)).thenThrow(new PetNotFoundException(99L));
 
         mockMvc.perform(get("/pets/99")
+                        .with(httpBasic("user", "password"))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
@@ -71,6 +64,7 @@ class PetControllerTest {
         when(petService.createPet(pet)).thenReturn(savedPet);
 
         mockMvc.perform(post("/pets")
+                        .with(httpBasic("user", "password"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(pet)))
                 .andExpect(status().isCreated())
@@ -87,6 +81,7 @@ class PetControllerTest {
         when(petService.updatePet(eq(1L), any(Pet.class))).thenReturn(updatedPet);
 
         mockMvc.perform(put("/pets/1")
+                        .with(httpBasic("user", "password"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(petUpdate)))
                 .andExpect(status().isOk())
@@ -100,6 +95,7 @@ class PetControllerTest {
         when(petService.updatePet(eq(99L), any(Pet.class))).thenThrow(new PetNotFoundException(99L));
 
         mockMvc.perform(put("/pets/99")
+                        .with(httpBasic("user", "password"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(petUpdate)))
                 .andExpect(status().isNotFound());
@@ -110,7 +106,9 @@ class PetControllerTest {
     void deletePet_existingId_returnsNoContent() throws Exception {
         // Non serve stub, se il metodo non lancia eccezioni va bene
 
-        mockMvc.perform(delete("/pets/1"))
+        mockMvc.perform(delete("/pets/1")
+                        .with(httpBasic("user", "password"))
+                )
                 .andExpect(status().isNoContent());
 
         verify(petService).deletePet(1L);
@@ -120,7 +118,18 @@ class PetControllerTest {
     void deletePet_notExistingId_returnsNotFound() throws Exception {
         doThrow(new PetNotFoundException(99L)).when(petService).deletePet(99L);
 
-        mockMvc.perform(delete("/pets/99"))
+        mockMvc.perform(delete("/pets/99")
+                        .with(httpBasic("user", "password"))
+                )
                 .andExpect(status().isNotFound());
     }
+
+    @Test
+    void getPet_withInvalidCredentials_returnsUnauthorized() throws Exception {
+        mockMvc.perform(get("/pets/1")
+                        .with(httpBasic("wrongUser", "wrongPassword"))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
+    }
+
 }
