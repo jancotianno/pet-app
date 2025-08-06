@@ -1,7 +1,7 @@
 package com.example.petapp.controller;
 
+import com.example.petapp.dto.PetDto;
 import com.example.petapp.exception.PetNotFoundException;
-import com.example.petapp.model.Pet;
 import com.example.petapp.security.SecurityConfig;
 import com.example.petapp.service.PetService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,9 +34,9 @@ class PetControllerTest {
 
     @Test
     void getPet_existingId_returnsOk() throws Exception {
-        Pet pet = new Pet(1L, "Fido", "Dog", 3, "Mario");
+        PetDto petDto = new PetDto("Fido", "Dog", 3, "Mario");
 
-        when(petService.getPetById(1L)).thenReturn(pet);
+        when(petService.getPetById(1L)).thenReturn(petDto);
 
         mockMvc.perform(get("/pets/1")
                         .with(httpBasic("user", "password"))
@@ -58,27 +58,26 @@ class PetControllerTest {
 
     @Test
     void createPet_validInput_returnsCreated() throws Exception {
-        Pet pet = new Pet(null, "Fido", "Dog", 3, "Mario");
-        Pet savedPet = new Pet(1L, "Fido", "Dog", 3, "Mario");
+        PetDto petDto = new PetDto("Fido", "Dog", 3, "Mario");
+        PetDto savedPet = new PetDto( "Fido", "Dog", 3, "Mario");
 
-        when(petService.createPet(pet)).thenReturn(savedPet);
+        when(petService.createPet(petDto)).thenReturn(savedPet);
 
         mockMvc.perform(post("/pets")
                         .with(httpBasic("user", "password"))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(pet)))
+                        .content(objectMapper.writeValueAsString(petDto)))
                 .andExpect(status().isCreated())
-                .andExpect(header().string("Location", "/pets/1"))
-                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.species").value("Dog"))
                 .andExpect(jsonPath("$.name").value("Fido"));
     }
 
     @Test
     void updatePet_existingId_returnsOk() throws Exception {
-        Pet petUpdate = new Pet(null, "Fido", "Dog", 4, "Mario");
-        Pet updatedPet = new Pet(1L, "Fido", "Dog", 4, "Mario");
+        PetDto petUpdate = new PetDto( "Fido", "Dog", 4, "Mario");
+        PetDto updatedPet = new PetDto( "Fido", "Dog", 4, "Mario");
 
-        when(petService.updatePet(eq(1L), any(Pet.class))).thenReturn(updatedPet);
+        when(petService.updatePet(eq(1L), any(PetDto.class))).thenReturn(updatedPet);
 
         mockMvc.perform(put("/pets/1")
                         .with(httpBasic("user", "password"))
@@ -90,9 +89,10 @@ class PetControllerTest {
 
     @Test
     void updatePet_notExistingId_returnsNotFound() throws Exception {
-        Pet petUpdate = new Pet(null, "Fido", "Dog", 4, "Mario");
+        PetDto petUpdate = new PetDto( "Fido", "Dog", 4, "Mario");
 
-        when(petService.updatePet(eq(99L), any(Pet.class))).thenThrow(new PetNotFoundException(99L));
+        when(petService.updatePet(eq(99L), any(PetDto.class)))
+                .thenThrow(new PetNotFoundException(99L));
 
         mockMvc.perform(put("/pets/99")
                         .with(httpBasic("user", "password"))
@@ -101,11 +101,8 @@ class PetControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-    // Test DELETE /pets/{id}
     @Test
     void deletePet_existingId_returnsNoContent() throws Exception {
-        // Non serve stub, se il metodo non lancia eccezioni va bene
-
         mockMvc.perform(delete("/pets/1")
                         .with(httpBasic("user", "password"))
                 )

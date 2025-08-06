@@ -1,6 +1,7 @@
 package com.example.petapp;
 
-import com.example.petapp.repository.InMemoryPetRepository;
+import com.example.petapp.mapper.PetMapper;
+import com.example.petapp.repository.PetRepository;
 import com.example.petapp.service.PetService;
 import com.example.petapp.service.PetServiceImpl;
 import org.springframework.boot.SpringApplication;
@@ -15,7 +16,7 @@ public class PetappApplication {
 	}
 
     @Bean
-    public PetService petService() {
-        return new PetServiceImpl(new InMemoryPetRepository());
+    public PetService petService(PetRepository petRepository, PetMapper petMapper) {
+        return new PetServiceImpl(petRepository, petMapper);
     }
 }

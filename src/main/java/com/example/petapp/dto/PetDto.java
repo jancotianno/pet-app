@@ -1,13 +1,9 @@
 package com.example.petapp.dto;
 
-import lombok.Data;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 
-@Data
-public class PetDto {
-
-    private String name;
-    private String species;
-    private Integer age;
-    private String ownerName;
-
-}
+public record PetDto(@NotBlank String name,
+                     @NotBlank String species,
+                     @Min(0)Integer age,
+                     @NotBlank String ownerName) {}
