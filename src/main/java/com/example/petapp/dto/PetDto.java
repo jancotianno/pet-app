@@ -7,4 +7,4 @@ public record PetDto(Long id,
                      @NotBlank String name,
                      @NotBlank String species,
                      @Min(0)Integer age,
-                     @NotBlank String ownerName) {}
+                     String ownerName) {}
