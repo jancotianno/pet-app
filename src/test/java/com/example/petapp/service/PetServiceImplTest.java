@@ -35,7 +35,7 @@ class PetServiceImplTest {
     @Test
     void whenUpdateExistingPet_thenReturnsUpdatedDto() {
         Pet existingPet = new Pet(1L, "Fido", "Dog", 5, "Alice");
-        PetDto updatedDto = new PetDto("Fido2", "Dog", 6, "Alice");
+        PetDto updatedDto = new PetDto(1L, "Fido2", "Dog", 6, "Alice");
         Pet updatedPet = new Pet(1L, "Fido2", "Dog", 6, "Alice");
 
         when(petRepository.findById(1L)).thenReturn(Optional.of(existingPet));
@@ -57,10 +57,10 @@ class PetServiceImplTest {
 
     @Test
     void whenCreatePet_thenReturnsSavedDto() {
-        PetDto inputDto = new PetDto("Fido", "Dog", 3, "Mario");
+        PetDto inputDto = new PetDto(null, "Fido", "Dog", 3, "Mario"); // id null in input
         Pet petToSave = new Pet(null, "Fido", "Dog", 3, "Mario");
         Pet savedPet = new Pet(1L, "Fido", "Dog", 3, "Mario");
-        PetDto savedDto = new PetDto("Fido", "Dog", 3, "Mario");
+        PetDto savedDto = new PetDto(1L, "Fido", "Dog", 3, "Mario"); // id valorizzato in output
 
         when(petMapper.toEntity(inputDto)).thenReturn(petToSave);
         when(petRepository.save(petToSave)).thenReturn(savedPet);
@@ -79,8 +79,8 @@ class PetServiceImplTest {
         );
 
         List<PetDto> petDtos = List.of(
-                new PetDto("Fido", "Dog", 3, "Mario"),
-                new PetDto("Milo", "Cat", 2, "Giulia")
+                new PetDto(1L, "Fido", "Dog", 3, "Mario"),
+                new PetDto(2L, "Milo", "Cat", 2, "Giulia")
         );
 
         when(petRepository.findAll()).thenReturn(pets);
